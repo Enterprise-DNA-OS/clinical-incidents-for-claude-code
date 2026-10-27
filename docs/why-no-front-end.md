@@ -1,24 +1,24 @@
 # Why there is no front end
 
-RiskMan is a database with a subscription. The tables underneath it are ordinary: a few entities, a few relationships, a handful of workflows you repeat every week. What you pay for is the layer on top that lets people who do not write SQL get at those tables. Screens, filters, dashboards, forms.
+RiskMan is a database with a subscription. Underneath are ordinary tables: incidents, the people affected, ratings, reviews, actions, feedback, risks. What you pay for is the layer on top: forms, screens, filters, dashboards and report builders.
 
-That layer used to be the whole product, because talking to a database was hard. It is not hard any more. Open this folder in Claude Code, describe what you want, and it writes the query, runs it, and explains the answer. Ask a question the dashboard never had a chart for and you still get an answer.
+The quality team does not need the screens. It needs the answers: which clock is about to run out, which incident has no review, which ward reports late, what the committee should see on Thursday. Open this folder in Claude Code, ask in your own words, and it runs the query and shows the answer with the rule behind it.
 
 ## What you gain
 
-- **Better answers.** A dashboard shows what the vendor decided to chart. Here you ask your own question, in your own words, and get it answered against your own data.
-- **No seats.** Everyone who needs to look can look. The bill does not grow with headcount.
-- **Your data in your Postgres.** Plain tables. Back them up, query them from anything, leave any time. There is no export step because there is nothing to leave.
-- **A process that matches you.** When your way of working changes, you add a command. You do not wait for a feature request to clear.
+- **Answers, not report builders.** Ask "which SAC 2 events have no review and no disclosure?" and get the list. No report to design first.
+- **Every clock in one place.** HDC Right 10, the duty of candour, HQSC Part A and B and your own rules, worked out in working days for each service's region.
+- **No seats.** Everyone who needs to look can look.
+- **Your data in your own database.** Plain tables. Back them up, query them from anything, leave any time.
 
-## What you give up
+## What a screen gives that this does not
 
-- **A visual board.** Stages are a table you ask about, not cards you drag.
-- **A phone app.** It runs where Claude Code runs.
-- **A vendor help desk.** This is open source. Enterprise DNA supports the installed version for businesses that want someone to call.
+Be honest about it before you switch:
 
-## Who this fits
+- **Staff reporting from the ward.** Nurses and doctors report an incident in two minutes on a form, often from a shared computer or a phone. Here someone types or pastes the report into Claude Code, or a form writes into the same database.
+- **Anonymous reporting.** Some services want staff to be able to report without a login.
+- **A phone app.** This runs where Claude Code runs.
 
-Small teams who already use Claude Code, or who would rather learn to ask than learn another interface. If your team needs a screen to look at all day, keep RiskMan. If you need the answers more than the screens, this is cheaper, faster and yours.
+For a hospital, the reporting form is the one screen that matters. Enterprise DNA builds it into your version, writing straight into these tables, so the quality team keeps the answers and staff keep a two-minute form.
 
 Installed and run for you: https://enterprisedna.co/omni/instead-of/riskman

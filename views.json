@@ -2,12 +2,64 @@
   {
     "name": "week",
     "title": "This week",
-    "subtitle": "Clinical Incidents for Claude Code: what needs attention, rendered by npm run view",
+    "subtitle": "Every clock that is overdue or due in the next seven days, worst first. Rendered by npm run view.",
     "sections": [
       {
-        "title": "Needs attention",
-        "note": "TODO(author): point this at the industry's attention view (overdue, stuck, quiet).",
-        "sql": "select 'replace me' as item, 'TODO(author)' as why"
+        "title": "The law: overdue or due this week",
+        "note": "HDC Code of Rights Right 10 (New Zealand complaints) and the Victorian statutory duty of candour. Sources in docs/compliance.md.",
+        "sql": "select ref, service, obligation, due_on, standing, days_over, rule from v_obligation_status where kind = 'law' and standing in ('overdue', 'due soon') order by due_on"
+      },
+      {
+        "title": "National policy: overdue or due this week",
+        "sql": "select ref, service, obligation, due_on, standing, days_over, rule from v_obligation_status where kind = 'policy' and standing in ('overdue', 'due soon') order by due_on"
+      },
+      {
+        "title": "House rules: overdue or due this week",
+        "sql": "select ref, service, obligation, due_on, standing, days_over from v_obligation_status where kind = 'house' and standing in ('overdue', 'due soon') order by due_on"
+      }
+    ]
+  },
+  {
+    "name": "incidents",
+    "title": "Open incidents",
+    "subtitle": "Everything not closed, with its rating, its review and who owns it.",
+    "sections": [
+      {
+        "title": "Severity 1 and 2, and sentinel events",
+        "sql": "select i.ref, i.service, i.category, i.harm, i.rating, i.sentinel_category as sentinel, i.manager, r.method as review, r.due_on as review_due, i.days_open from v_incidents i left join reviews r on r.incident_id = i.id where i.status <> 'closed' and (i.severity <= 2 or i.sentinel_category is not null) order by i.severity, i.reported_at"
+      },
+      {
+        "title": "Everything else open",
+        "sql": "select ref, service, unit, category, harm, rating, manager, days_open from v_incidents where status <> 'closed' and coalesce(severity, 9) > 2 and sentinel_category is null order by reported_at"
+      }
+    ]
+  },
+  {
+    "name": "feedback",
+    "title": "Complaints and compliments",
+    "subtitle": "Where every complaint sits on its clock.",
+    "sections": [
+      {
+        "title": "Open complaints",
+        "sql": "select ref, service, received_on, from_name, category, stage, working_days_open, handled_by from v_complaints where kind = 'complaint' and stage <> 'closed' order by received_on"
+      },
+      {
+        "title": "Compliments and suggestions, last 60 days",
+        "sql": "select ref, service, kind, received_on, about from v_complaints where kind <> 'complaint' and received_on > current_date - 60 order by received_on desc"
+      }
+    ]
+  },
+  {
+    "name": "risks",
+    "title": "Risk register",
+    "sections": [
+      {
+        "title": "Open risks, highest first",
+        "sql": "select ref, service, title, likelihood, consequence, score, level, owner, review_due, open_actions from v_risks where status = 'open' order by score desc"
+      },
+      {
+        "title": "Actions overdue",
+        "sql": "select ref, from_ref, description, owner, due_on from v_actions where standing = 'overdue' order by due_on"
       }
     ]
   }

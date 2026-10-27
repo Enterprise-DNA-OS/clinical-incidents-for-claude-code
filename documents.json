@@ -1,11 +1,54 @@
 [
   {
-    "name": "example",
-    "title": "TODO(author): the first document this industry must produce",
-    "for_each": "select gen_random_uuid() as id, 'Example' as name",
-    "file": "name",
+    "name": "incident-report",
+    "title": "Incident report",
+    "for_each": "select id, ref || ' ' || service as label from v_incidents where severity <= 3 or harm in ('moderate', 'severe', 'death') order by ref",
+    "file": "label",
     "sections": [
-      { "title": "Details", "sql": "select 'replace me' as item, $1::text as record_id" }
+      { "title": "Incident", "layout": "record", "sql": "select ref, service_name as service, unit, occurred_at, reported_at, reported_by, category, person_type, person_ref, harm, rating, case when sentinel_category is not null then 'Category ' || sentinel_category end as sentinel_event, manager, status from v_incidents where id = $1" },
+      { "title": "What happened", "layout": "record", "sql": "select summary, immediate_action from incidents where id = $1" },
+      { "title": "Timeframes", "sql": "select o.obligation, o.due_on, o.met_on, o.standing, o.rule from v_obligation_status o join incidents i on i.ref = o.ref where i.id = $1 order by o.due_on" },
+      { "title": "Actions", "sql": "select a.ref, a.description, a.owner, a.due_on, a.done_on from v_actions a join incidents i on i.ref = a.from_ref where i.id = $1 order by a.due_on" }
+    ]
+  },
+  {
+    "name": "complaint-acknowledgement",
+    "title": "Complaint acknowledgement",
+    "for_each": "select c.id, c.ref || ' ' || c.from_name as label from complaints c where c.kind = 'complaint' order by c.ref",
+    "file": "label",
+    "sections": [
+      { "title": "Your complaint", "layout": "record", "sql": "select c.ref as reference, c.from_name as to_name, s.name as service, c.received_on, c.about as you_told_us, h.name as looking_into_it from complaints c join services s on s.id = c.service_id left join staff h on h.id = c.handled_by where c.id = $1" },
+      { "title": "What happens next", "note": "In New Zealand, we decide within 10 working days of this letter whether your complaint is justified or we need more time, and we update you at least monthly (HDC Code of Rights, Right 10).", "sql": "select o.obligation as step, o.due_on as by from v_obligation_status o join complaints c on c.ref = o.ref where c.id = $1 and o.met_on is null order by o.due_on" }
+    ]
+  },
+  {
+    "name": "candour-meeting-record",
+    "title": "Open disclosure meeting record",
+    "for_each": "select i.id, i.ref || ' ' || v.service as label from incidents i join v_incidents v on v.id = i.id join disclosures d on d.incident_id = i.id where d.meeting_held_at is not null or v.sdc_applies order by i.ref",
+    "file": "label",
+    "sections": [
+      { "title": "Event", "layout": "record", "sql": "select v.ref, v.service_name as service, v.person_ref as patient_record, v.occurred_at, v.summary, case when v.sdc_applies then 'Statutory duty of candour, Health Services Act 1988 (Vic) Part 5A' else 'Open disclosure' end as basis from v_incidents v where v.id = $1" },
+      { "title": "Disclosure steps", "layout": "record", "sql": "select l.name as lead, d.apology_at as apology_given, d.meeting_arranged_at as meeting_arranged, d.meeting_held_at as meeting_held, d.notes_given_at as notes_given, d.final_report_at as final_report_given, d.note from disclosures d left join staff l on l.id = d.lead_id where d.incident_id = $1" }
+    ]
+  },
+  {
+    "name": "risk-register",
+    "title": "Risk register",
+    "for_each": "select id, code || ' ' || name as label from services order by code",
+    "file": "label",
+    "sections": [
+      { "title": "Open risks", "sql": "select r.ref, r.title, r.likelihood, r.consequence, r.score, r.level, r.controls, r.owner, r.review_due from v_risks r join risks rr on rr.id = r.id where (rr.service_id = $1 or rr.service_id is null) and r.status = 'open' order by r.score desc" }
+    ]
+  },
+  {
+    "name": "governance-summary",
+    "title": "Clinical governance summary",
+    "for_each": "select id, code || ' ' || name as label from services order by code",
+    "file": "label",
+    "sections": [
+      { "title": "Incidents, last 30 days", "sql": "select category, count(*)::int as reported, count(*) filter (where harm in ('moderate', 'severe', 'death'))::int as with_harm, count(*) filter (where severity <= 2)::int as severity_1_2 from v_incidents where service_id = $1 and occurred_at > service_now - interval '30 days' group by category order by reported desc" },
+      { "title": "Timeframes overdue", "sql": "select o.ref, o.obligation, o.due_on, o.rule from v_obligation_status o join services s on s.code = o.service where s.id = $1 and o.standing = 'overdue' and o.kind in ('law', 'policy') order by o.due_on" },
+      { "title": "Complaints open", "sql": "select ref, from_name, received_on, stage, working_days_open from v_complaints where service_id = $1 and kind = 'complaint' and stage <> 'closed' order by received_on" }
     ]
   }
 ]
